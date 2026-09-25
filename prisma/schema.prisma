@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  passwordHash  String
+  username      String          @unique
+  isPremium     Boolean         @default(false)
+  clickCount    Int             @default(0)
+  createdAt     DateTime        @default(now())
+  favorites     Favorite[]
+  reviews       Review[]
+  searchHistory SearchHistory[]
+}
+
+model PlaceCache {
+  id        Int      @id @default(autoincrement())
+  cacheKey  String   @unique
+  data      Json
+  fetchedAt DateTime @default(now())
+
+  @@index([fetchedAt])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  placeId   String
+  userId    Int
+  rating    Int      // 1-5 maps to go -> gooooo
+  body      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([placeId])
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  placeId   String
+  placeName String
+  placeType String
+  lat       Float
+  lon       Float
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, placeId])
+}
+
+model SearchHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  category  String
+  lat       Float
+  lon       Float
+  filters   Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
